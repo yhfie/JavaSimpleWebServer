@@ -24,9 +24,12 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.Executors;
+import java.util.Properties;
 
 // Untuk HTTP Server
 import com.sun.net.httpserver.HttpServer;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 /**
  *
@@ -53,10 +56,12 @@ public class MainViewController {
     private Path logDirectory = Paths.get("D:/Web/logs"); // default dir
     private int port = 14687; // default port
     private StringBuilder accessLogs = new StringBuilder();
+    private static final String CONFIG_FILE = "config.properties";
     
     @FXML
     private void initialize() {
         // Inisialisasi teks field port, web directory, dan logs directory
+        loadConfig();
         portField.setText(String.valueOf(port));
         webDirectoryField.setText(webDirectory.toString());
         logDirectoryField.setText(logDirectory.toString());
@@ -74,6 +79,7 @@ public class MainViewController {
             webDirectory = Paths.get(selectedDirectory.getAbsolutePath());
             // Update teks pada UI field dengan dir yg dipilih
             webDirectoryField.setText(webDirectory.toString());
+            saveConfig();
         }
     }
 
@@ -85,6 +91,7 @@ public class MainViewController {
         if (selectedDirectory != null) {
             logDirectory = Paths.get(selectedDirectory.getAbsolutePath());
             logDirectoryField.setText(logDirectory.toString());
+            saveConfig();
         }
     }
 
@@ -133,8 +140,15 @@ public class MainViewController {
                     Path indexPath = filePath.resolve("index.html");
                     if (Files.exists(indexPath)) {
                         filePath = indexPath;
+                        String redirectURL;
                         // Redirect to index.html
-                        exchange.getResponseHeaders().set("Location", requestedPath + "/index.html");
+                        if(requestedPath == "/"){
+                            redirectURL = "http://localhost:" + port + requestedPath + (requestedPath.endsWith("/") ? "" : "/") + "index.html";
+                        }
+                        else{
+                            redirectURL = requestedPath + (requestedPath.endsWith("/") ? "" : "/") + "index.html";
+                        }
+                        exchange.getResponseHeaders().set("Location", redirectURL);
                         exchange.sendResponseHeaders(302, -1);
                         return;
                     }
@@ -188,6 +202,7 @@ public class MainViewController {
             server.start();
             appendLog("Server started on port " + port);
             toggleButton.setText("Stop Server");
+            saveConfig();
         } catch (IOException | NumberFormatException e) {
             appendLog("Failed to start server: " + e.getMessage());
         }
@@ -221,6 +236,34 @@ public class MainViewController {
             Files.write(logFile, logMessage.getBytes(), Files.exists(logFile) ? java.nio.file.StandardOpenOption.APPEND : java.nio.file.StandardOpenOption.CREATE);
         } catch (IOException e) {
             appendLog("Error saving log to file: " + e.getMessage());
+        }
+    }
+    
+    private void saveConfig(){
+        Properties props = new Properties();
+        props.setProperty("port", String.valueOf(port));
+        props.setProperty("webDirectory", webDirectory.toString());
+        props.setProperty("logDirectory", logDirectory.toString());
+        try(OutputStream output = new FileOutputStream(CONFIG_FILE)){
+            props.store(output, null);
+            appendLog("Configuration saved");
+        }
+        catch(IOException e){
+            appendLog("Error saving configuration: " + e.getMessage());
+        }
+    }
+    
+    private void loadConfig(){
+        Properties props = new Properties();
+        try(FileInputStream input = new FileInputStream(CONFIG_FILE)){
+            props.load(input);
+            port = Integer.parseInt(props.getProperty("port", "14687"));
+            webDirectory = Paths.get(props.getProperty("webDirectory", "D:/Web"));
+            logDirectory = Paths.get(props.getProperty("logDirectory", "D:/Web/logs"));
+            appendLog("Configuration loaded");
+        }
+        catch(IOException | NumberFormatException e){
+            appendLog("Error loading configuration: " + e.getMessage());
         }
     }
 }

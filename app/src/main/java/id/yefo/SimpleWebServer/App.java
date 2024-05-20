@@ -7,7 +7,6 @@ import java.io.IOException;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.Parent;
-import javafx.scene.control.Label;
 
 import javafx.stage.Stage;
 
@@ -20,7 +19,10 @@ public class App extends Application {
     
     @Override
     public void start(Stage primaryStage) throws IOException {
+        // Load file view sbg view utama
         Parent root = FXMLLoader.load(getClass().getResource("/id/yefo/SimpleWebServer/MainView.fxml"));
+        
+        // Membuat Scene baru dengan FXML yang telah di-load
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Yefo's Simple Web Server");
@@ -29,6 +31,8 @@ public class App extends Application {
 
     public static void main(String[] args) {
 //        System.out.println(new App().getGreeting());
+
+        // Launch aplikasi JavaFX
         launch(args);
     }
 }

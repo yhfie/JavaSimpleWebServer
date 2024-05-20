@@ -79,6 +79,7 @@ public class MainViewController {
         // Membuat objek DirectoryChooser supaya user dapat memilih directory
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Web Directory");
+        
         // Membuka file selection dialog yg akan disimpan di selectedDirectory
         webSelectedDirectory = directoryChooser.showDialog(new Stage());
         if (webSelectedDirectory != null){
@@ -156,7 +157,8 @@ public class MainViewController {
                     if (Files.exists(indexPath)) {
                         filePath = indexPath;
                         String redirectURL;
-                        // Redirect to index.html
+                        
+                        // Mengecek request index.html di root
                         if(requestedPath == "/"){
                             redirectURL = "http://localhost:" + port + requestedPath + (requestedPath.endsWith("/") ? "" : "/") + "index.html";
                         }
@@ -170,41 +172,59 @@ public class MainViewController {
                     else{
                         // Mengirim list directory jika tidak ada index.html
                         appendLog("Directory listing for: " + filePath.toString());
+                        
+                        // StringBuilder untuk memanipulasi string
                         StringBuilder directoryListing = new StringBuilder("<html><body><ul>");
+                        
+                        // ArrayList bertipe Path
+                        // Membuat objek DirectoryStream untuk filePath
                         try (DirectoryStream<Path> stream = Files.newDirectoryStream(filePath)){
                             directoryListing.append("<h1>Directory list</h1>")
                                             .append("<h2>")
                                             .append(filePath.toString())
                                             .append("</h2>");
                             for (Path entry : stream) {
-                                directoryListing.append("<li><a href=\"")
+                                directoryListing.append("<li><a href=\"") // hyperlink start
+                                                // menambahkan path yang di-request
                                                 .append(requestedPath)
                                                 .append(requestedPath.endsWith("/") ? "" : "/")
+                                                // untuk files
                                                 .append(entry.getFileName().toString())
-                                                .append("\">")
+                                                .append("\">") // hyperlink end
+                                                // nama file
                                                 .append(entry.getFileName().toString())
                                                 .append("</a></li>");
                             }
                         }
                         directoryListing.append("</ul></body></html>");
+                        
+                        // Mengconvert data ke byte 
                         byte[] data = directoryListing.toString().getBytes();
+                        
+                        // Set response headers dan panjang data
                         exchange.sendResponseHeaders(200, data.length);
+                        
+                        // Write directory listing sebagai body response
                         try (OutputStream os = exchange.getResponseBody()) {
                             os.write(data);
                         }
+                        
+                        // Selesai
                         return;
                     }
                 }
                 
                 appendLog("Resolved File Path: " + filePath.toString());
                 
-                if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
+                // Mengecek apakah file benar2 ada dan bukan merupakan sebuah direktori
+                if (Files.exists(filePath) && !Files.isDirectory(filePath)){
                     byte[] data = Files.readAllBytes(filePath);
                     exchange.sendResponseHeaders(200, data.length);
                     try (OutputStream os = exchange.getResponseBody()) {
                         os.write(data);
                     }
-                } else {
+                }
+                else{ // Jika tidak, tampilkan page 404
                     String notFound = "404 Not Found";
                     exchange.sendResponseHeaders(404, notFound.length());
                     try (OutputStream os = exchange.getResponseBody()) {
@@ -224,7 +244,9 @@ public class MainViewController {
     }
 
     private void stopServer(){
+        // Cek apakah server sedang berjalan
         if (server != null){
+            // Stop server
             server.stop(0);
             server = null;
             appendLog("Server stopped");
@@ -233,21 +255,30 @@ public class MainViewController {
         }
     }
     
+    // Meng-generate pesan logs
     private void logAccess(com.sun.net.httpserver.HttpExchange exchange){
         String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         String method = exchange.getRequestMethod();
         String url = exchange.getRequestURI().getPath();
         String ipAddress = exchange.getRemoteAddress().getAddress().toString();
         String logMessage = timestamp + " - " + method + " - " + ipAddress + " - " + url;
+        
+        // Menampilkan pada logArea
         logArea.appendText(logMessage + "\n");
+        
+        // Menyimpan pada file log
         accessLogs.append(logMessage).append("\n");
     }
     
+    // Membuat file logs
     private void saveLogToFile(String logMessage) {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
             String fileName = "access_log_" + sdf.format(new Date()) + ".txt";
             Path logFile = logDirectory.resolve(fileName);
+            
+            // Masukkan path file logs
+            // Jika file logs ada, maka append/write pada bagian akhir. Jika tidak maka buat baru/write file
             Files.write(logFile, logMessage.getBytes(), Files.exists(logFile) ? java.nio.file.StandardOpenOption.APPEND : java.nio.file.StandardOpenOption.CREATE);
         } catch (IOException e) {
             appendLog("Error saving log to file: " + e.getMessage());
@@ -255,10 +286,15 @@ public class MainViewController {
     }
     
     private void saveConfig(){
+        // Objek properties digunakan untuk menyimpan dan mengakses pengaturan konfigurasi
         Properties props = new Properties();
+        
+        // Menyimpan value2 penting
         props.setProperty("port", String.valueOf(port));
         props.setProperty("webDirectory", webDirectory.toString());
         props.setProperty("logDirectory", logDirectory.toString());
+        
+        // Membuat file config
         try(OutputStream output = new FileOutputStream(CONFIG_FILE)){
             props.store(output, null);
             appendLog("Configuration saved");
@@ -270,8 +306,16 @@ public class MainViewController {
     
     private void loadConfig(){
         Properties props = new Properties();
+        File configFile = new File(CONFIG_FILE);
+        
+        // Jika file config tidak ada, maka buat baru
+        if(!configFile.exists()){
+            saveConfig();
+        }
         try(FileInputStream input = new FileInputStream(CONFIG_FILE)){
             props.load(input);
+            
+            // Mengisi variable2 yang diperlukan sesuai nilainya pada file config
             port = Integer.parseInt(props.getProperty("port", "14687"));
             webDirectory = Paths.get(props.getProperty("webDirectory", "D:/Web"));
             logDirectory = Paths.get(props.getProperty("logDirectory", "D:/Web/logs"));

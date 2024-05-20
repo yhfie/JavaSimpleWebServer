@@ -30,6 +30,7 @@ import java.util.Properties;
 import com.sun.net.httpserver.HttpServer;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import javafx.scene.control.Label;
 
 /**
  *
@@ -50,6 +51,12 @@ public class MainViewController {
 
     @FXML
     private TextArea logArea;
+    
+    @FXML
+    private Label serverStatus;
+    
+    private File webSelectedDirectory;
+    private File logSelectedDirectory;
 
     private HttpServer server;
     private Path webDirectory = Paths.get("D:/Web"); // default dir
@@ -73,13 +80,12 @@ public class MainViewController {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Web Directory");
         // Membuka file selection dialog yg akan disimpan di selectedDirectory
-        File selectedDirectory = directoryChooser.showDialog(new Stage());
-        if (selectedDirectory != null){
-            // Convert objek File yg dipilih menjadi objek Path
-            webDirectory = Paths.get(selectedDirectory.getAbsolutePath());
+        webSelectedDirectory = directoryChooser.showDialog(new Stage());
+        if (webSelectedDirectory != null){
             // Update teks pada UI field dengan dir yg dipilih
+            webDirectory = Paths.get(webSelectedDirectory.getAbsolutePath());
             webDirectoryField.setText(webDirectory.toString());
-            saveConfig();
+//            saveConfig();
         }
     }
 
@@ -87,11 +93,11 @@ public class MainViewController {
     private void handleBrowseLogDirectory(){ // Konsep sama dengan web directory
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Log Directory");
-        File selectedDirectory = directoryChooser.showDialog(new Stage());
-        if (selectedDirectory != null) {
-            logDirectory = Paths.get(selectedDirectory.getAbsolutePath());
+        logSelectedDirectory = directoryChooser.showDialog(new Stage());
+        if (logSelectedDirectory != null) {
+            logDirectory = Paths.get(logSelectedDirectory.getAbsolutePath());
             logDirectoryField.setText(logDirectory.toString());
-            saveConfig();
+//            saveConfig();
         }
     }
 
@@ -100,10 +106,13 @@ public class MainViewController {
         if (server == null){
             // Jika server blm ada, maka server dinyalakan
             startServer();
+            saveConfig();
+            serverStatus.setText("Running");
         }
         else{
             // Jika ada, maka dimatikan
             stopServer();
+            serverStatus.setText("Not running");
         }
     }
     
@@ -114,8 +123,14 @@ public class MainViewController {
 
     private void startServer() {
         try {
-            // Mendapatkan port dari field port
+            String webDirString = webDirectoryField.getText();
+            String logDirString = logDirectoryField.getText();
+            
+            // Mendapatkan port,web dir, log dir dari field masing2
             port = Integer.parseInt(portField.getText());
+            webDirectory = Paths.get(webDirString);
+            logDirectory = Paths.get(logDirString);
+            saveConfig();
             
             // Membuat instansi HttpServer dari port di atas dengan backlog 0
             server = HttpServer.create(new InetSocketAddress(port), 0);
@@ -202,7 +217,7 @@ public class MainViewController {
             server.start();
             appendLog("Server started on port " + port);
             toggleButton.setText("Stop Server");
-            saveConfig();
+//            saveConfig();
         } catch (IOException | NumberFormatException e) {
             appendLog("Failed to start server: " + e.getMessage());
         }

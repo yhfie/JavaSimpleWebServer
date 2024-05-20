@@ -21,6 +21,6 @@
         
         <Button fx:id="toggleButton" layoutX="231.0" layoutY="138.0" onAction="#handleToggleServer" prefHeight="32.0" prefWidth="92.0" text="Start Server" />
         
-        <TextArea fx:id="logArea" layoutX="20" layoutY="181.0" prefHeight="287.0" prefWidth="516.0" />
+        <TextArea fx:id="logArea" editable="false" layoutX="20" layoutY="181.0" prefHeight="287.0" prefWidth="516.0" />
     </children>
 </AnchorPane>

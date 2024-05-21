@@ -10,14 +10,14 @@
     <children>
         <Label layoutX="20" layoutY="20" text="Web Directory:" />
         <TextField fx:id="webDirectoryField" layoutX="119.0" layoutY="16" prefHeight="25.0" prefWidth="340.0" />
-        <Button layoutX="481.0" layoutY="16.0" onAction="#handleBrowseWebDirectory" text="Browse" />
+        <Button fx:id="browseDirBtn" layoutX="481.0" layoutY="16.0" onAction="#handleBrowseWebDirectory" text="Browse" />
         
         <Label layoutX="20" layoutY="60" text="Port:" />
         <TextField fx:id="portField" layoutX="119.0" layoutY="56" prefHeight="25.0" prefWidth="340.0" />
         
         <Label layoutX="20" layoutY="100" text="Log Directory:" />
         <TextField fx:id="logDirectoryField" layoutX="119.0" layoutY="96" prefHeight="25.0" prefWidth="340.0" />
-        <Button layoutX="481.0" layoutY="96.0" onAction="#handleBrowseLogDirectory" text="Browse" />
+        <Button fx:id="browseLogBtn" layoutX="481.0" layoutY="96.0" onAction="#handleBrowseLogDirectory" text="Browse" />
         
         <Button fx:id="toggleButton" layoutX="231.0" layoutY="138.0" onAction="#handleToggleServer" prefHeight="32.0" prefWidth="92.0" text="Start Server" />
         

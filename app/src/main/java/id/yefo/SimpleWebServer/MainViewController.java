@@ -48,6 +48,12 @@ public class MainViewController {
 
     @FXML
     private Button toggleButton;
+    
+    @FXML
+    private Button browseDirBtn;
+    
+    @FXML
+    private Button browseLogBtn;
 
     @FXML
     private TextArea logArea;
@@ -174,29 +180,39 @@ public class MainViewController {
                         appendLog("Directory listing for: " + filePath.toString());
                         
                         // StringBuilder untuk memanipulasi string
-                        StringBuilder directoryListing = new StringBuilder("<html><body><ul>");
-                        
+                        StringBuilder directoryListing = new StringBuilder("<html>")
+                                                            .append("<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH\" crossorigin=\"anonymous\">")
+                                                            .append("<body>");
                         // ArrayList bertipe Path
                         // Membuat objek DirectoryStream untuk filePath
                         try (DirectoryStream<Path> stream = Files.newDirectoryStream(filePath)){
                             directoryListing.append("<h1>Directory list</h1>")
                                             .append("<h2>")
                                             .append(filePath.toString())
-                                            .append("</h2>");
+                                            .append("</h2>")
+                                            .append("<div class=\"row\">");             // row open
                             for (Path entry : stream) {
-                                directoryListing.append("<li><a href=\"") // hyperlink start
-                                                // menambahkan path yang di-request
-                                                .append(requestedPath)
-                                                .append(requestedPath.endsWith("/") ? "" : "/")
-                                                // untuk files
-                                                .append(entry.getFileName().toString())
-                                                .append("\">") // hyperlink end
-                                                // nama file
-                                                .append(entry.getFileName().toString())
-                                                .append("</a></li>");
+                                directoryListing.append("<div class=\"col-md-3 p-1 ml-2 mt-2\">")           // col open
+                                                    .append("<div class=\"card\">")                         // card open
+                                                        .append("<div class=\"card-body\">")                // card body open
+                                                            .append("<a href=\"")                           // hyperlink start
+                                                                // menambahkan path yang di-request
+                                                                .append(requestedPath)
+                                                                .append(requestedPath.endsWith("/") ? "" : "/")
+                                                                // untuk files
+                                                                .append(entry.getFileName().toString())
+                                                            .append("\">")                                  // hyperlink end
+                                                            // nama file
+                                                            .append(entry.getFileName().toString())
+                                                            .append("</a>")
+                                                        .append("</div>")                                   // card body close
+                                                    .append("</div>")                                       // card close
+                                                .append("</div>");                                          // col close
                             }
                         }
-                        directoryListing.append("</ul></body></html>");
+                        directoryListing.append("</div>")                               // row close
+                                        .append("<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js\" integrity=\"sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz\" crossorigin=\"anonymous\"></script>")
+                                        .append("</body></html>");
                         
                         // Mengconvert data ke byte 
                         byte[] data = directoryListing.toString().getBytes();
@@ -237,6 +253,13 @@ public class MainViewController {
             server.start();
             appendLog("Server started on port " + port);
             toggleButton.setText("Stop Server");
+            
+            portField.setDisable(true);
+            webDirectoryField.setDisable(true);
+            browseDirBtn.setDisable(true);
+            logDirectoryField.setDisable(true);
+            browseLogBtn.setDisable(true);
+            
 //            saveConfig();
         } catch (IOException | NumberFormatException e) {
             appendLog("Failed to start server: " + e.getMessage());
@@ -252,6 +275,12 @@ public class MainViewController {
             appendLog("Server stopped");
             saveLogToFile(accessLogs.toString());
             toggleButton.setText("Start Server");
+            
+            portField.setDisable(false);
+            webDirectoryField.setDisable(false);
+            browseDirBtn.setDisable(false);
+            logDirectoryField.setDisable(false);
+            browseLogBtn.setDisable(false);
         }
     }
     
